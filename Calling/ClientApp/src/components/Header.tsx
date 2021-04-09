@@ -1,5 +1,5 @@
 // © Microsoft Corporation. All rights reserved.
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { Separator, Pivot, PivotItem, Stack } from '@fluentui/react';
 import { Call, LocalVideoStream, VideoDeviceInfo } from '@azure/communication-calling';
 import MediaControls from './MediaControls';
@@ -23,6 +23,7 @@ export interface HeaderProps {
   actionable: boolean;
   localVideo: boolean;
   mic: boolean;
+  camera: boolean;
   shareScreen: boolean;
   call: Call;
   endCall(): void;
@@ -33,14 +34,16 @@ export interface HeaderProps {
   microphonePermission: string;
   screenWidth: number;
   setMic(mic: boolean): void;
-  setLocalVideoStream(localVideoStream: LocalVideoStream | undefined): void;
+  setCamera(camera: boolean): void;
   setScreenShare(screenShare: boolean): void;
   isLocalScreenShareSupportedInBrowser(): boolean;
-  localVideoStream: LocalVideoStream | undefined;
   videoDeviceInfo: VideoDeviceInfo | undefined;
+  localVideoStream: LocalVideoStream | undefined;
+  setLocalVideoStream(localVideoStream: LocalVideoStream | undefined): void;
 }
 
 export default (props: HeaderProps): JSX.Element => {
+ const [cameraBusy, setCameraBusy] = useState(false);
   const togglePeople = (selectedPane: string, setSelectedPane: (pane: string) => void) => {
     return selectedPane !== CommandPanelTypes.People
       ? setSelectedPane(CommandPanelTypes.People)
@@ -54,16 +57,26 @@ export default (props: HeaderProps): JSX.Element => {
   };
 
   const handleLocalVideoOnOff = async () => {
-    if (props.localVideoStream) {
-      await props.call.stopVideo(props.localVideoStream);
-      props.setLocalVideoStream(undefined);
-    } else {
-      if (props.videoDeviceInfo) {
-        const localVideoStream = new LocalVideoStream(props.videoDeviceInfo);
-        props.setLocalVideoStream(localVideoStream);
-        await props.call.startVideo(localVideoStream);
-      }
+  if (cameraBusy) {
+      return;
     }
+
+    if (!props.localVideoStream) {
+      console.error('no local video stream setup')
+      return;
+    }
+
+   setCameraBusy(true);
+
+    if (props.camera) {
+      await props.call.stopVideo(props.localVideoStream);
+      props.setCamera(false);
+    } else {
+      props.setCamera(true);
+      await props.call.startVideo(props.localVideoStream);
+    }
+
+   setCameraBusy(false);
   };
 
   const handleMuteOnOff = () => {
@@ -73,12 +86,6 @@ export default (props: HeaderProps): JSX.Element => {
   const handleScreenSharingOnOff = () => {
     props.setScreenShare(!props.shareScreen);
   };
-
-  useEffect(() => {
-    if (props.call && props.call.localVideoStreams.length === 0 && props.localVideoStream) {
-      props.call.startVideo(props.localVideoStream);
-    }
-  }, [props.call, props.localVideoStream]);
 
   return (
     <Stack id="header" className={props.screenWidth > Constants.MINI_HEADER_WINDOW_WIDTH ? headerContainer : headerCenteredContainer}>
@@ -127,7 +134,7 @@ export default (props: HeaderProps): JSX.Element => {
       <MediaControls
         micActive={props.mic}
         onMicChange={handleMuteOnOff}
-        cameraActive={props.localVideoStream !== undefined}
+        cameraActive={props.camera}
         onCameraChange={handleLocalVideoOnOff}
         screenShareActive={props.shareScreen}
         activeScreenShareStream={props.screenShareStreams[0] ?? undefined}

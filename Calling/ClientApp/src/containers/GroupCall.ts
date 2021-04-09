@@ -1,12 +1,11 @@
 import { connect } from 'react-redux';
 import GroupCall, { GroupCallProps } from '../components/GroupCall';
 import { joinGroup, setMicrophone } from '../core/sideEffects';
-import { setLocalVideoStream } from '../core/actions/streams';
 import { setVideoDeviceInfo, setAudioDeviceInfo } from '../core/actions/devices';
 import {
   AudioDeviceInfo,
+  LocalVideoStream,
   VideoDeviceInfo,
-  LocalVideoStream
 } from '@azure/communication-calling';
 import { State } from '../core/reducers';
 
@@ -21,7 +20,7 @@ const mapStateToProps = (state: State, props: GroupCallProps) => ({
   mic: state.controls.mic,
   groupCallEndReason: state.calls.groupCallEndReason,
   isGroup: () => state.calls.call && state.calls.call.direction !== 'Incoming' && !!state.calls.group,
-  joinGroup: async () => {
+  joinGroup: async (localVideoStream?: LocalVideoStream) => {
     state.calls.callAgent &&
     
       await joinGroup(
@@ -30,15 +29,13 @@ const mapStateToProps = (state: State, props: GroupCallProps) => ({
           groupId: state.calls.group
         },
         {
-          videoOptions: { localVideoStreams: state.streams.localVideoStream ? [state.streams.localVideoStream] : undefined },
+          videoOptions: { localVideoStreams:localVideoStream && state.controls.camera ? [localVideoStream] : undefined},
           audioOptions: { muted: !state.controls.mic }
         }
       );
   },
   remoteParticipants: state.calls.remoteParticipants,
   callState: state.calls.callState,
-  localVideo: state.controls.localVideo,
-  localVideoStream: state.streams.localVideoStream,
   screenShareStreams: state.streams.screenShareStreams,
   videoDeviceInfo: state.devices.videoDeviceInfo,
   audioDeviceInfo: state.devices.audioDeviceInfo,
@@ -55,8 +52,7 @@ const mapDispatchToProps = (dispatch: any) => ({
   },
   setVideoDeviceInfo: (deviceInfo: VideoDeviceInfo) => {
     dispatch(setVideoDeviceInfo(deviceInfo));
-  },
-  setLocalVideoStream: (localVideoStream: LocalVideoStream) => dispatch(setLocalVideoStream(localVideoStream))
+  }
 });
 
 const connector: any = connect(mapStateToProps, mapDispatchToProps);

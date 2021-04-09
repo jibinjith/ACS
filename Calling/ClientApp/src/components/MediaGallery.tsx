@@ -8,10 +8,11 @@ import { SelectionState } from 'core/RemoteStreamSelector';
 
 export interface MediaGalleryProps {
   userId: string;
+  camera: boolean;
   displayName: string;
   remoteParticipants: RemoteParticipant[];
-  localVideoStream: LocalVideoStream;
   dominantParticipants: SelectionState[];
+  localVideoStream: LocalVideoStream | undefined;
 }
 
 export default (props: MediaGalleryProps): JSX.Element => {
@@ -26,11 +27,11 @@ export default (props: MediaGalleryProps): JSX.Element => {
     (participants) => (participants && participants.length > 0 ? Math.ceil(Math.sqrt(participants.length + 1)) : 1),
     []
   );
-  const getMediaGalleryTilesForParticipants = (participants: RemoteParticipant[], userId: string, displayName: string) => {
+  const getMediaGalleryTilesForParticipants = React.useCallback((participants: RemoteParticipant[], userId: string, displayName: string) => {
     const remoteParticipantsMediaGalleryItems = participants.map((participant) => (
       <div key={`${utils.getId(participant.identifier)}-tile`} className={mediaGalleryStyle}>
         <RemoteStreamMedia
-          key={utils.getId(participant.identifier)}
+          key={userId}
           stream={participant.videoStreams[0]}
           isParticipantStreamSelected = {props.dominantParticipants.filter(p => p.participantId === utils.getId(participant.identifier)).length > 0}
           label={participant.displayName ?? utils.getId(participant.identifier)}
@@ -39,17 +40,19 @@ export default (props: MediaGalleryProps): JSX.Element => {
     ));
 
     // create a LocalStreamMedia component for the local participant
-    const localParticipantMediaGalleryItem = (
-      <div key="localParticipantTile" className={mediaGalleryStyle}>
-        <LocalStreamMedia label={displayName} stream={props.localVideoStream} />
-      </div>
-    );
+    const localParticipantMediaGalleryItem = (camera: boolean, localVideoStream?: LocalVideoStream) => {
+      return (
+        <div key="localParticipantTile" className={mediaGalleryStyle}>
+          <LocalStreamMedia label={displayName} stream={localVideoStream && camera ? localVideoStream : undefined} />
+        </div>
+      )
+    }
 
     // add the LocalStreamMedia at the beginning of the list
-    remoteParticipantsMediaGalleryItems.unshift(localParticipantMediaGalleryItem);
+    remoteParticipantsMediaGalleryItems.unshift(localParticipantMediaGalleryItem(props.camera, props.localVideoStream));
 
     return remoteParticipantsMediaGalleryItems;
-  };
+  },[props.localVideoStream, props.camera, props.remoteParticipants, props.dominantParticipants]);
 
   const numberOfColumns = calculateNumberOfColumns(props.remoteParticipants);
   if (numberOfColumns !== gridCol) setGridCol(numberOfColumns);

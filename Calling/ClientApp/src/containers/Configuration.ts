@@ -3,18 +3,17 @@ import ConfigurationScreen, { ConfigurationScreenProps } from '../components/Con
 import { setGroup } from '../core/actions/calls';
 import { setVideoDeviceInfo, setAudioDeviceInfo } from '../core/actions/devices';
 import { initCallAgent, initCallClient, updateDevices } from '../core/sideEffects';
-import { setMic } from '../core/actions/controls';
+import { setCamera, setMic } from '../core/actions/controls';
 import { State } from '../core/reducers';
-import { AudioDeviceInfo, VideoDeviceInfo, LocalVideoStream } from '@azure/communication-calling';
-import { setLocalVideoStream } from '../core/actions/streams';
+import { AudioDeviceInfo, VideoDeviceInfo } from '@azure/communication-calling';
 
 const mapStateToProps = (state: State, props: ConfigurationScreenProps) => ({
   deviceManager: state.devices.deviceManager,
   callAgent: state.calls.callAgent,
   group: state.calls.group,
   mic: state.controls.mic,
+  camera: state.controls.camera,
   screenWidth: props.screenWidth,
-  localVideoStream: state.streams.localVideoStream,
   audioDeviceInfo: state.devices.audioDeviceInfo,
   videoDeviceInfo: state.devices.videoDeviceInfo,
   videoDeviceList: state.devices.videoDeviceList,
@@ -24,8 +23,8 @@ const mapStateToProps = (state: State, props: ConfigurationScreenProps) => ({
 });
 
 const mapDispatchToProps = (dispatch: any, props: ConfigurationScreenProps) => ({
-  setLocalVideoStream: (localVideoStream: LocalVideoStream) => dispatch(setLocalVideoStream(localVideoStream)),
   setMic: (mic: boolean) => dispatch(setMic(mic)),
+  setCamera: (camera: boolean) => dispatch(setCamera(camera)),
   setAudioDeviceInfo: (deviceInfo: AudioDeviceInfo) => dispatch(setAudioDeviceInfo(deviceInfo)),
   setVideoDeviceInfo: (deviceInfo: VideoDeviceInfo) => dispatch(setVideoDeviceInfo(deviceInfo)),
   setupCallClient: (unsupportedStateHandler: () => void) =>

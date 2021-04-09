@@ -23,12 +23,12 @@ import {
 export interface LocalPreviewProps {
   setMic(mic: boolean): void;
   mic: boolean;
-  setLocalVideoStream(device: LocalVideoStream | undefined): void;
+  setCamera(camera: boolean): void;
+  camera: boolean;
   videoDeviceInfo: VideoDeviceInfo;
   audioDeviceInfo: AudioDeviceInfo;
   videoDeviceList: VideoDeviceInfo[];
   audioDeviceList: AudioDeviceInfo[];
-  localVideoStream: LocalVideoStream;
 }
 
 let rendererView: VideoStreamRendererView;
@@ -41,17 +41,20 @@ export default (props: LocalPreviewProps): JSX.Element => {
   };
 
   const handleLocalVideoOnOff = (_ev: React.MouseEvent<HTMLElement>, checked = false): void => {
-    const stream = new LocalVideoStream(props.videoDeviceInfo);
-    props.setLocalVideoStream(checked ? stream : undefined);
+    props.setCamera(checked);
   };
+
   const handleLocalMicOnOff = (_ev: React.MouseEvent<HTMLElement>, checked = false): void => {
     props.setMic(checked);
   };
 
   useEffect(() => {
     (async () => {
-      if (props.localVideoStream) {
-        const renderer: VideoStreamRenderer = new VideoStreamRenderer(props.localVideoStream);
+      if (props.camera) {
+        // if your using a local video stream but not in a call, you don't need to maintain the same reference
+        // so we can create it whenever we are generating a render
+        const localVideoStream = new LocalVideoStream(props.videoDeviceInfo);
+        const renderer: VideoStreamRenderer = new VideoStreamRenderer(localVideoStream);
         rendererView = await renderer.createView({ scalingMode: 'Crop' });
 
         const container = document.getElementById(Constants.CONFIGURATION_LOCAL_VIDEO_PREVIEW_ID);
@@ -67,7 +70,7 @@ export default (props: LocalPreviewProps): JSX.Element => {
         rendererView.dispose();
       }
     };
-  }, [props.localVideoStream]);
+  }, [props.camera]);
   return (
     <Stack className={localPreviewContainerStyle}>
       <Stack
@@ -76,7 +79,7 @@ export default (props: LocalPreviewProps): JSX.Element => {
         id={Constants.CONFIGURATION_LOCAL_VIDEO_PREVIEW_ID}
         className={localPreviewStyle}
       >
-        {!props.localVideoStream && <Image styles={imgStyles} {...imageProps} aria-label="Local video preview image"/>}
+        {!props.camera && <Image styles={imgStyles} {...imageProps} aria-label="Local video preview image"/>}
       </Stack>
       <Stack
         horizontal
@@ -88,7 +91,7 @@ export default (props: LocalPreviewProps): JSX.Element => {
         <CallVideoIcon size="medium" />
         <Toggle
           onKeyDownCapture={(e) => {}}
-          checked={props.localVideoStream !== undefined}
+          checked={props.camera}
           styles={toggleStyle}
           disabled={!props.videoDeviceInfo || props.videoDeviceList.length === 0}
           onChange={handleLocalVideoOnOff}

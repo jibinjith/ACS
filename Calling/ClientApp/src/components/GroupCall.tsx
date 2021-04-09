@@ -17,12 +17,12 @@ import {
 } from './styles/GroupCall.styles';
 import {
   Call,
-  LocalVideoStream,
   AudioDeviceInfo,
   VideoDeviceInfo,
   RemoteParticipant,
   CallAgent,
-  DeviceManager
+  DeviceManager,
+  LocalVideoStream
 } from '@azure/communication-calling';
 import { ParticipantStream } from 'core/reducers/index.js';
 
@@ -35,8 +35,6 @@ export interface GroupCallProps {
   mic: boolean;
   remoteParticipants: RemoteParticipant[];
   callState: string;
-  localVideo: boolean;
-  localVideoStream: LocalVideoStream;
   screenShareStreams: ParticipantStream[];
   audioDeviceInfo: AudioDeviceInfo;
   videoDeviceInfo: VideoDeviceInfo;
@@ -46,22 +44,28 @@ export interface GroupCallProps {
   shareScreen: boolean;
   setAudioDeviceInfo(deviceInfo: AudioDeviceInfo): void;
   setVideoDeviceInfo(deviceInfo: VideoDeviceInfo): void;
-  setLocalVideoStream(stream: LocalVideoStream | undefined): void;
   mute(): void;
   isGroup(): void;
-  joinGroup(): void;
+  joinGroup(localVideoStream?: LocalVideoStream): void;
   endCallHandler(): void;
+  camera:boolean;
 }
 
 export default (props: GroupCallProps): JSX.Element => {
   const [selectedPane, setSelectedPane] = useState(CommandPanelTypes.None);
+  // when you are using sending video up you need to use a local video stream
+  // the local video stream reference needs to be the same across a call, so we are storing the
+  // reference with the main "calling" screen.
+  const [localVideoStream, setLocalVideoStream] = useState<LocalVideoStream | undefined>(undefined);
   const activeScreenShare = props.screenShareStreams && props.screenShareStreams.length === 1;
 
-  const { callAgent, call, joinGroup } = props;
+  const { callAgent, call, joinGroup, videoDeviceInfo } = props;
 
   useEffect(() => {
     if (callAgent && !call) {
-      joinGroup();
+      let localVideoStream = videoDeviceInfo ? new LocalVideoStream(videoDeviceInfo) : undefined;
+      joinGroup(localVideoStream);
+      setLocalVideoStream(localVideoStream);
     }
   }, [callAgent, call, joinGroup]);
 
@@ -75,6 +79,8 @@ export default (props: GroupCallProps): JSX.Element => {
             props.endCallHandler(); 
           }}
           screenWidth={props.screenWidth}
+          localVideoStream={localVideoStream}
+          setLocalVideoStream={setLocalVideoStream}
         />
       </Stack.Item>
       <Stack.Item styles={containerStyles}>
@@ -85,7 +91,7 @@ export default (props: GroupCallProps): JSX.Element => {
                 {activeScreenShare && <MediaFullScreen activeScreenShareStream={props.screenShareStreams[0]} />}
               </Stack.Item>
               <Stack.Item grow styles={!activeScreenShare ? activeContainerClassName : hiddenContainerClassName}>
-                <MediaGallery />
+                <MediaGallery localVideoStream={localVideoStream} />
               </Stack.Item>
               {selectedPane !== CommandPanelTypes.None && (
                   window.innerWidth > Constants.MINI_HEADER_WINDOW_WIDTH ?

@@ -8,7 +8,6 @@ import DisplayNameField from './DisplayNameField';
 import {
   VideoDeviceInfo,
   AudioDeviceInfo,
-  LocalVideoStream,
   DeviceManager,
   CallAgent,
   CallEndReason
@@ -41,11 +40,10 @@ export interface ConfigurationScreenProps {
   setAudioDeviceInfo(device: AudioDeviceInfo): void;
   mic: boolean;
   setMic(mic: boolean): void;
-  setLocalVideoStream(stream: LocalVideoStream | undefined): void;
-  localVideoRendererIsBusy: boolean;
+  camera: boolean;
+  setCamera(camera: boolean): void;
   videoDeviceInfo: VideoDeviceInfo;
   audioDeviceInfo: AudioDeviceInfo;
-  localVideoStream: LocalVideoStream;
   screenWidth: number;
 }
 
@@ -77,10 +75,10 @@ export default (props: ConfigurationScreenProps): JSX.Element => {
           <LocalPreview
             mic={props.mic}
             setMic={props.setMic}
-            setLocalVideoStream={props.setLocalVideoStream}
+            camera={props.camera}
+            setCamera={props.setCamera}
             videoDeviceInfo={props.videoDeviceInfo}
             audioDeviceInfo={props.audioDeviceInfo}
-            localVideoStream={props.localVideoStream}
             videoDeviceList={props.videoDeviceList}
             audioDeviceList={props.audioDeviceList}
           />

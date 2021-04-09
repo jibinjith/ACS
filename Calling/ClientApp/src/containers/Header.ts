@@ -4,8 +4,7 @@ import { setMicrophone, setShareUnshareScreen, endCall } from '../core/sideEffec
 import { utils } from '../Utils/Utils';
 import { Constants } from '../core/constants';
 import { State } from '../core/reducers';
-import { LocalVideoStream } from '@azure/communication-calling';
-import { setLocalVideoStream } from '../core/actions/streams';
+import { setCamera } from 'core/actions/controls';
 
 const mapStateToProps = (state: State, props: HeaderProps) => ({
   actionable:
@@ -13,8 +12,8 @@ const mapStateToProps = (state: State, props: HeaderProps) => ({
     state.calls.callState === Constants.RINGING ||
     state.calls.callState === Constants.CONNECTING ||
     state.calls.callState === Constants.CONNECTED,
-  localVideoStream: state.streams.localVideoStream,
   mic: state.controls.mic,
+  camera: state.controls.camera,
   call: state.calls.call,
   shareScreen: state.controls.shareScreen,
   endCall: () => {
@@ -26,12 +25,12 @@ const mapStateToProps = (state: State, props: HeaderProps) => ({
   screenShareStreams: state.streams.screenShareStreams,
   localVideoRendererIsBusy: state.streams.localVideoRendererIsBusy,
   cameraPermission: state.devices.cameraPermission,
-  microphonePermission: state.devices.microphonePermission
+  microphonePermission: state.devices.microphonePermission,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-  setLocalVideoStream: (localVideoStream: LocalVideoStream) => dispatch(setLocalVideoStream(localVideoStream)),
   setMic: (mic: boolean) => dispatch(setMicrophone(mic)),
+  setCamera: (camera: boolean) => dispatch(setCamera(camera)),
   setScreenShare: (screenShare: boolean) => dispatch(setShareUnshareScreen(screenShare)),
   // Only support Desktop -- Chrome | Edge (Chromium) | Safari
   isLocalScreenShareSupportedInBrowser: () => {

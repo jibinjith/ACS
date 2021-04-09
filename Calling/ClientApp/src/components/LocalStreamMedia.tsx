@@ -9,7 +9,7 @@ import staticMediaSVG from '../assets/staticmedia.svg';
 
 export interface LocalStreamMediaProps {
   label: string;
-  stream: LocalVideoStream;
+  stream?: LocalVideoStream;
 }
 
 export default (props: LocalStreamMediaProps): JSX.Element => {
