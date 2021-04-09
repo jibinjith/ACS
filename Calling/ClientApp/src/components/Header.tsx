@@ -1,7 +1,7 @@
 // © Microsoft Corporation. All rights reserved.
 import React, { useState } from 'react';
 import { Separator, Pivot, PivotItem, Stack } from '@fluentui/react';
-import { Call, LocalVideoStream, VideoDeviceInfo } from '@azure/communication-calling';
+import { Call, LocalVideoStream } from '@azure/communication-calling';
 import MediaControls from './MediaControls';
 import { CommandPanelTypes } from './CommandPanel';
 import { UserFriendsIcon, SettingsIcon } from '@fluentui/react-icons-northstar';
@@ -37,9 +37,7 @@ export interface HeaderProps {
   setCamera(camera: boolean): void;
   setScreenShare(screenShare: boolean): void;
   isLocalScreenShareSupportedInBrowser(): boolean;
-  videoDeviceInfo: VideoDeviceInfo | undefined;
   localVideoStream: LocalVideoStream | undefined;
-  setLocalVideoStream(localVideoStream: LocalVideoStream | undefined): void;
 }
 
 export default (props: HeaderProps): JSX.Element => {
