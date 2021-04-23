@@ -8,6 +8,7 @@ const mapStateToProps = (state: State) => ({
   remoteParticipants: state.calls.remoteParticipants,
   dominantParticipants: state.calls.dominantParticipants,
   camera: state.controls.camera,
+  videoDeviceInfo: state.devices.videoDeviceInfo
 });
 
 const connector: any = connect(mapStateToProps);

@@ -1,5 +1,5 @@
 // © Microsoft Corporation. All rights reserved.
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack, Toggle, Image, ImageFit } from '@fluentui/react';
 import { MicIcon, CallVideoIcon } from '@fluentui/react-icons-northstar';
 import { Constants } from '../core/constants';
@@ -48,13 +48,25 @@ export default (props: LocalPreviewProps): JSX.Element => {
     props.setMic(checked);
   };
 
+  const [localVideoStream, setLocalVideoStream] = useState<LocalVideoStream | undefined>(undefined);
+  const { videoDeviceInfo, camera } = props;
+
+  useEffect(() => {
+    if (videoDeviceInfo) {
+      if (!localVideoStream) {
+        setLocalVideoStream(new LocalVideoStream(videoDeviceInfo))
+      } else if (localVideoStream.source.id !== videoDeviceInfo.id) {
+        localVideoStream.switchSource(videoDeviceInfo);
+      }
+    }
+  }, [localVideoStream, videoDeviceInfo]);
+
   useEffect(() => {
     (async () => {
-      if (props.camera) {
-        // if your using a local video stream but not in a call, you don't need to maintain the same reference
-        // so we can create it whenever we are generating a render
-        const localVideoStream = new LocalVideoStream(props.videoDeviceInfo);
+      if (camera && videoDeviceInfo && localVideoStream) {
+
         const renderer: VideoStreamRenderer = new VideoStreamRenderer(localVideoStream);
+
         rendererView = await renderer.createView({ scalingMode: 'Crop' });
 
         const container = document.getElementById(Constants.CONFIGURATION_LOCAL_VIDEO_PREVIEW_ID);
@@ -70,7 +82,9 @@ export default (props: LocalPreviewProps): JSX.Element => {
         rendererView.dispose();
       }
     };
-  }, [props.camera]);
+  }, [camera, videoDeviceInfo]);
+
+
   return (
     <Stack className={localPreviewContainerStyle}>
       <Stack
@@ -79,7 +93,7 @@ export default (props: LocalPreviewProps): JSX.Element => {
         id={Constants.CONFIGURATION_LOCAL_VIDEO_PREVIEW_ID}
         className={localPreviewStyle}
       >
-        {!props.camera && <Image styles={imgStyles} {...imageProps} aria-label="Local video preview image"/>}
+        {!camera && <Image styles={imgStyles} {...imageProps} aria-label="Local video preview image"/>}
       </Stack>
       <Stack
         horizontal
@@ -91,7 +105,7 @@ export default (props: LocalPreviewProps): JSX.Element => {
         <CallVideoIcon size="medium" />
         <Toggle
           onKeyDownCapture={(e) => {}}
-          checked={props.camera}
+          checked={camera}
           styles={toggleStyle}
           disabled={!props.videoDeviceInfo || props.videoDeviceList.length === 0}
           onChange={handleLocalVideoOnOff}

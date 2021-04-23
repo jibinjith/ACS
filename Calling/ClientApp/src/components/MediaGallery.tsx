@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { mediaGalleryGridStyle, mediaGalleryStyle } from './styles/MediaGallery.styles';
-import { RemoteParticipant, LocalVideoStream } from '@azure/communication-calling';
+import { RemoteParticipant, LocalVideoStream, VideoDeviceInfo } from '@azure/communication-calling';
 import { utils } from '../Utils/Utils';
 import LocalStreamMedia from './LocalStreamMedia';
 import RemoteStreamMedia from './RemoteStreamMedia';
@@ -13,6 +13,7 @@ export interface MediaGalleryProps {
   remoteParticipants: RemoteParticipant[];
   dominantParticipants: SelectionState[];
   localVideoStream: LocalVideoStream | undefined;
+  videoDeviceInfo: VideoDeviceInfo;
 }
 
 export default (props: MediaGalleryProps): JSX.Element => {
@@ -43,7 +44,7 @@ export default (props: MediaGalleryProps): JSX.Element => {
     const localParticipantMediaGalleryItem = (camera: boolean, localVideoStream?: LocalVideoStream) => {
       return (
         <div key="localParticipantTile" className={mediaGalleryStyle}>
-          <LocalStreamMedia label={displayName} stream={localVideoStream && camera ? localVideoStream : undefined} />
+          <LocalStreamMedia label={displayName} camera={props.camera} videoDeviceInfo={props.videoDeviceInfo} stream={localVideoStream && camera ? localVideoStream : undefined} />
         </div>
       )
     }

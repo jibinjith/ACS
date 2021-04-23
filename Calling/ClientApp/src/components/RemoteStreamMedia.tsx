@@ -46,29 +46,44 @@ export default (props: RemoteStreamMediaProps): JSX.Element => {
   const renderRemoteStream = useCallback(async () => {
     const container = document.getElementById(streamId);
     if (container && stream && stream.isAvailable && isParticipantStreamSelected) {
+
       // if we are already rendering a stream we don't want to start rendering the same stream
       if (activeStreamBeingRendered) {
         return;
       }
 
-      // set the flag that a stream is being rendered
+      // set the flag that a stream is being rendered, so we don't try to start rendering again while rendering
       setActiveStreamBeingRendered(true);
       setShowRenderLoading(true);
+
+      // then create our renderer around our stream
       const renderer: VideoStreamRenderer = new VideoStreamRenderer(stream);
-      // this can block a really long time if we fail to be subscribed to the call and it has to retry
-      const rendererView = await renderer.createView({ scalingMode: 'Crop' });
-      setShowRenderLoading(false);
-      if (container && container.childElementCount === 0) {
-        container.appendChild(rendererView.target);
+      
+      try {
+        rendererView = await renderer.createView({ scalingMode: 'Crop' });
+        setShowRenderLoading(false);
+        if (container && container.childElementCount === 0) {
+          container.appendChild(rendererView.target);
+        }
       }
+      catch {
+        // if an exception is thrown lets clean up our render and reset the state
+        setActiveStreamBeingRendered(false);
+
+        if (rendererView) {
+          rendererView.dispose();
+        }
+      }
+      
     } else {
+      // when we are done with our render lets clean up the render and reset the state
       setActiveStreamBeingRendered(false);
 
       if (rendererView) {
         rendererView.dispose();
       }
     }
-  }, [stream, isParticipantStreamSelected, setShowRenderLoading, setActiveStreamBeingRendered]);
+  }, [stream?.id, stream?.isAvailable, isParticipantStreamSelected]);
 
   useEffect(() => {
     if (!stream) {
@@ -77,8 +92,13 @@ export default (props: RemoteStreamMediaProps): JSX.Element => {
 
     stream.on('isAvailableChanged', renderRemoteStream);
 
-    if (stream.isAvailable) {
+    if (stream && stream.isAvailable && isParticipantStreamSelected) {
       renderRemoteStream();
+    }
+
+    return () => {
+      // un-register the remote stream listener
+      stream.off('isAvailableChanged', renderRemoteStream);
     }
   }, [stream, isParticipantStreamSelected, renderRemoteStream]);
 

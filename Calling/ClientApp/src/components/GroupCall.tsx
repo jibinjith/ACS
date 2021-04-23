@@ -59,15 +59,41 @@ export default (props: GroupCallProps): JSX.Element => {
   const [localVideoStream, setLocalVideoStream] = useState<LocalVideoStream | undefined>(undefined);
   const activeScreenShare = props.screenShareStreams && props.screenShareStreams.length === 1;
 
-  const { callAgent, call, joinGroup, videoDeviceInfo } = props;
+  const { camera, callAgent, call, joinGroup, videoDeviceInfo } = props;
+
+  useEffect(() => {
+    (async() => {
+      if (videoDeviceInfo) {
+        if (!localVideoStream) {
+          setLocalVideoStream(new LocalVideoStream(videoDeviceInfo))
+        } else if (localVideoStream.source.id !== videoDeviceInfo.id) {
+          
+          localVideoStream.switchSource(videoDeviceInfo);
+  
+          if (call && camera) {
+            await call.stopVideo(localVideoStream);
+            await call.startVideo(localVideoStream);
+          }
+
+          setLocalVideoStream(localVideoStream)
+        }
+      }
+    })();
+    
+  }, [localVideoStream, videoDeviceInfo, call, camera]);
 
   useEffect(() => {
     if (callAgent && !call) {
-      let localVideoStream = videoDeviceInfo ? new LocalVideoStream(videoDeviceInfo) : undefined;
-      joinGroup(localVideoStream);
-      setLocalVideoStream(localVideoStream);
+      if (camera && videoDeviceInfo) {
+        const localStream = new LocalVideoStream(videoDeviceInfo);
+        joinGroup(localStream);
+        setLocalVideoStream(localStream);
+      }
+      else {
+        joinGroup(undefined);
+      }
     }
-  }, [callAgent, call, joinGroup]);
+  }, [videoDeviceInfo, callAgent, call, joinGroup]);
 
   return (
     <Stack horizontalAlign="center" verticalAlign="center" styles={containerStyles}>

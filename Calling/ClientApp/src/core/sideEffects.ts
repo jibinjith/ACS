@@ -337,10 +337,3 @@ export const joinGroup = async (callAgent: CallAgent, context: GroupCallLocator,
 export const addParticipant = async (call: Call, user: CommunicationUserKind): Promise<void> => {
   await call.addParticipant(user);
 };
-
-export const removeParticipant = async (
-  call: Call,
-  user: CommunicationUserKind
-): Promise<void> => {
-  await call.removeParticipant(user).catch((e: CommunicationServicesError) => console.error(e));
-};
